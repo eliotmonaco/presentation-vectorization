@@ -1,0 +1,261 @@
+[
+  {
+    "objectID": "slides.html#vectorization-and-iteration",
+    "href": "slides.html#vectorization-and-iteration",
+    "title": "Vectorization and iteration in R",
+    "section": "Vectorization and iteration",
+    "text": "Vectorization and iteration\nWhat does it mean?\n\nIteration: performing the same operation/function(s) multiple times\nVectorization: function input is a vector, function output is a vector"
+  },
+  {
+    "objectID": "slides.html#outline",
+    "href": "slides.html#outline",
+    "title": "Vectorization and iteration in R",
+    "section": "Outline",
+    "text": "Outline\n\nVector basics\nMethods to vectorize your code\n\nloops, dplyr::mutate(), apply() & friends, purrr::map() & friends\n\nUseful workflows for introducing vectorization"
+  },
+  {
+    "objectID": "slides.html#what-is-a-vector",
+    "href": "slides.html#what-is-a-vector",
+    "title": "Vectorization and iteration in R",
+    "section": "What is a vector?",
+    "text": "What is a vector?\n\nA data structure (container) with one dimension\nProperty = length\nTypes\n\nAtomic vector (one data type)\nList (multiple data types)"
+  },
+  {
+    "objectID": "slides.html#vector-types",
+    "href": "slides.html#vector-types",
+    "title": "Vectorization and iteration in R",
+    "section": "Vector types",
+    "text": "Vector types\n\n\n\nAtomic vector\n\nelements are the same data type\n\n\n\n\n\nnumeric vector\n\n\n\n\n\ncharacter vector\n\n\n\n\n\n\n\nList\n\nelements can be different data types and data structures"
+  },
+  {
+    "objectID": "slides.html#atomic-vectors",
+    "href": "slides.html#atomic-vectors",
+    "title": "Vectorization and iteration in R",
+    "section": "Atomic vectors",
+    "text": "Atomic vectors\nc() creates atomic vectors.\n\nx &lt;- c(\"a\", \"b\", \"c\", \"apple\", \"banana\", \"coconut\")    # character vector\ny &lt;- c(10, 100, 1000, 10000, 100000)                   # numeric vector\nz &lt;- c(TRUE, TRUE, FALSE, FALSE)                       # logical vector\n\n\nclass(x)\n\n[1] \"character\"\n\nclass(y)\n\n[1] \"numeric\"\n\nclass(z)\n\n[1] \"logical\""
+  },
+  {
+    "objectID": "slides.html#lists",
+    "href": "slides.html#lists",
+    "title": "Vectorization and iteration in R",
+    "section": "Lists",
+    "text": "Lists\nlist() creates lists.\n\nx &lt;- c(\"a\", \"b\", \"c\", \"apple\", \"banana\", \"coconut\")    # character vector\ny &lt;- c(10, 100, 1000, 10000, 100000)                   # numeric vector\nz &lt;- c(TRUE, TRUE, FALSE, FALSE)                       # logical vector\n\nmy_list &lt;- list(\n  element1 = x,\n  element2 = y,\n  element3 = z\n)\n\n\nstr(my_list)\n\nList of 3\n $ element1: chr [1:6] \"a\" \"b\" \"c\" \"apple\" ...\n $ element2: num [1:5] 1e+01 1e+02 1e+03 1e+04 1e+05\n $ element3: logi [1:4] TRUE TRUE FALSE FALSE"
+  },
+  {
+    "objectID": "slides.html#um-actually",
+    "href": "slides.html#um-actually",
+    "title": "Vectorization and iteration in R",
+    "section": "Um actually",
+    "text": "Um actually\nTechnically…\n\n\n“vector” includes both atomic vectors and lists\ndataframe columns are atomic vectors\n\n\n\nBut colloquially…\n\n\n“vector” means an atomic vector\n“list” means a list"
+  },
+  {
+    "objectID": "slides.html#indexing-vectors",
+    "href": "slides.html#indexing-vectors",
+    "title": "Vectorization and iteration in R",
+    "section": "Indexing vectors",
+    "text": "Indexing vectors\n\nelements &lt;- c(\"water\", \"earth\", \"fire\", \"air\")\n\n\nUse square brackets [] to access specific elements of atomic vectors by their numeric position.\n\n\n\nelements[3]\n\n[1] \"fire\"\n\n\n\n\n\nelements[1:3]\n\n[1] \"water\" \"earth\" \"fire\""
+  },
+  {
+    "objectID": "slides.html#assign-subtract",
+    "href": "slides.html#assign-subtract",
+    "title": "Vectorization and iteration in R",
+    "section": "Assign & subtract",
+    "text": "Assign & subtract\n\nelements &lt;- c(\"water\", \"earth\", \"fire\", \"air\")\n\n\nAssignment by indexing\n\nelements[5] &lt;- \"cheese\"\n\nelements\n\n[1] \"water\"  \"earth\"  \"fire\"   \"air\"    \"cheese\"\n\n\n\n\nSubtraction by indexing\n\nelements &lt;- elements[-5]\n\nelements\n\n[1] \"water\" \"earth\" \"fire\"  \"air\""
+  },
+  {
+    "objectID": "slides.html#numeric-vs-logical-indexing",
+    "href": "slides.html#numeric-vs-logical-indexing",
+    "title": "Vectorization and iteration in R",
+    "section": "Numeric vs logical indexing",
+    "text": "Numeric vs logical indexing\n\nelements &lt;- c(\"water\", \"earth\", \"fire\", \"air\")\n\nVectors are indexed with other vectors.\n\n\nelements[c(1, 4)]               # numeric vector\n\n[1] \"water\" \"air\"  \n\n\n\n\n\nelements[c(T, F, F, T)]         # logical vector\n\n[1] \"water\" \"air\""
+  },
+  {
+    "objectID": "slides.html#numeric-vs-logical-indexing-1",
+    "href": "slides.html#numeric-vs-logical-indexing-1",
+    "title": "Vectorization and iteration in R",
+    "section": "Numeric vs logical indexing",
+    "text": "Numeric vs logical indexing\n\nelements &lt;- c(\"water\", \"earth\", \"fire\", \"air\")\n\nIf the indexing vector isn’t the same length as the vector being indexed, the indexing vector will be recycled.\n\n\nelements[c(T, F)]\n\n[1] \"water\" \"fire\" \n\n\n\nelements[c(T, F, F)]\n\n[1] \"water\" \"air\""
+  },
+  {
+    "objectID": "slides.html#index-with-expressions",
+    "href": "slides.html#index-with-expressions",
+    "title": "Vectorization and iteration in R",
+    "section": "Index with expressions",
+    "text": "Index with expressions\n\nelements &lt;- c(\"water\", \"earth\", \"fire\", \"air\")\n\nIf the value of an expression is a numeric or logical vector, it can be used to index.\n\n\n2 + 2                  # numeric expression\n\n[1] 4\n\nelements[2 + 2]\n\n[1] \"air\""
+  },
+  {
+    "objectID": "slides.html#index-with-expressions-1",
+    "href": "slides.html#index-with-expressions-1",
+    "title": "Vectorization and iteration in R",
+    "section": "Index with expressions",
+    "text": "Index with expressions\n\nelements &lt;- c(\"water\", \"earth\", \"fire\", \"air\")\n\nIf the value of an expression is a numeric or logical vector, it can be used to index.\n\nstringr::str_detect(elements, \"^e|e$\")                  # logical expression\n\n[1] FALSE  TRUE  TRUE FALSE\n\nelements[stringr::str_detect(elements, \"^e|e$\")]\n\n[1] \"earth\" \"fire\""
+  },
+  {
+    "objectID": "slides.html#indexing-lists",
+    "href": "slides.html#indexing-lists",
+    "title": "Vectorization and iteration in R",
+    "section": "Indexing lists",
+    "text": "Indexing lists\n\n\nSingle square brackets []\n\nmy_list[1]\n\n$element1\n[1] \"a\"       \"b\"       \"c\"       \"apple\"   \"banana\"  \"coconut\"\n\nclass(my_list[1])\n\n[1] \"list\"\n\n\n\nDouble square brackets [[]]\n\nmy_list[[1]]\n\n[1] \"a\"       \"b\"       \"c\"       \"apple\"   \"banana\"  \"coconut\"\n\nclass(my_list[[1]])\n\n[1] \"character\""
+  },
+  {
+    "objectID": "slides.html#indexing-lists-1",
+    "href": "slides.html#indexing-lists-1",
+    "title": "Vectorization and iteration in R",
+    "section": "Indexing lists",
+    "text": "Indexing lists\nAccess list elements by name using $ (equivalent to [[]]).\n\n\n\nmy_list$element1\n\n[1] \"a\"       \"b\"       \"c\"       \"apple\"   \"banana\"  \"coconut\"\n\nclass(my_list$element1)\n\n[1] \"character\"\n\n\n\n\nmy_list[[\"element1\"]]\n\n[1] \"a\"       \"b\"       \"c\"       \"apple\"   \"banana\"  \"coconut\"\n\nclass(my_list[[\"element1\"]])\n\n[1] \"character\""
+  },
+  {
+    "objectID": "slides.html#methods",
+    "href": "slides.html#methods",
+    "title": "Vectorization and iteration in R",
+    "section": "Methods",
+    "text": "Methods\n\n\nLoops\ndplyr::mutate()\napply() & friends\npurrr::map() & friends"
+  },
+  {
+    "objectID": "slides.html#loops",
+    "href": "slides.html#loops",
+    "title": "Vectorization and iteration in R",
+    "section": "Loops",
+    "text": "Loops\n\n\nfor & while\nextremely useful and versatile\ncovered in a prior RUG workshop\nloops will return when we talk about workflow"
+  },
+  {
+    "objectID": "slides.html#dplyrmutate",
+    "href": "slides.html#dplyrmutate",
+    "title": "Vectorization and iteration in R",
+    "section": "dplyr::mutate()",
+    "text": "dplyr::mutate()\n\n\niterate over all rows of a dataframe by apply a function to a column or columns\ncreate new columns or modify existing columns\n\n\nmutate() documentation"
+  },
+  {
+    "objectID": "slides.html#syntax",
+    "href": "slides.html#syntax",
+    "title": "Vectorization and iteration in R",
+    "section": "Syntax",
+    "text": "Syntax\n\ndata &lt;- data |&gt;\n  mutate(column_name = some_function(existing_column))      # dummy syntax"
+  },
+  {
+    "objectID": "slides.html#mutate-create-a-new-column",
+    "href": "slides.html#mutate-create-a-new-column",
+    "title": "Vectorization and iteration in R",
+    "section": "mutate(): create a new column",
+    "text": "mutate(): create a new column\nCalculate age from two dates.\n\nlibrary(tidyverse)\nlibrary(ksTracking)\n\ndate1 &lt;- as.Date(\"1980-08-01\")\ndate2 &lt;- as.Date(Sys.Date())\n\ncalculate_age(date1, date2)         # the function by itself\n\n[1] 44.10678"
+  },
+  {
+    "objectID": "slides.html#mutate-create-a-new-column-1",
+    "href": "slides.html#mutate-create-a-new-column-1",
+    "title": "Vectorization and iteration in R",
+    "section": "mutate(): create a new column",
+    "text": "mutate(): create a new column\n\nDataframemutate()\n\n\nSimulate a data set with two date variables: birth_date and collection_date.\n\nbl_data &lt;- sim_bl_data(n_tested = 10, test_range = c(\"2024-01-01\", \"2024-03-31\"))\n\n\n\nCode\nbl_data |&gt;\n  my_gt() |&gt;\n  gtExtras::gt_highlight_cols(\n    columns = c(birth_date, collection_date),\n    fill = \"thistle2\"\n  )\n\n\n\n\n\n\n\n\nperson_id\npatient_record_number\nlast_name\nfirst_name\nmiddle_name\nbirth_date\ncollection_date\nspecimen_source\nresult_value\nunits\nbirth_sex\ncoll_add_street\ncoll_add_unit\ncoll_add_city\ncoll_add_state\ncoll_add_zip\ncoll_add_county\n\n\n\n\n100001\n2000000001\nPhan\nDonna\nZ\n1959-08-29\n2024-03-03\nBlood - venous\n2\nμg/dL\nFemale\n14170 N St Francis Street\nNA\nWelda\nKS\n66091\nAnderson\n\n\n100002\n2000000002\nCabrera\nSamantha\nU\n2013-09-30\n2024-01-06\nBlood - venous\n1\nμg/dL\nFemale\n806 Levee 27\nNA\nAlmena\nKS\n67622\nNorton\n\n\n100003\n2000000003\nGreene\nJuan\nA\n1931-07-15\n2024-01-01\nBlood - venous\n&lt; 1\nμg/dL\nMale\n718 S Saint Paul Street\nApt 400\nJohnson City\nKS\n67855\nStanton\n\n\n100004\n2000000004\nWebb\nBenjamin\nE\n1956-07-26\n2024-03-06\nBlood - venous\n&lt; 3\nμg/dL\nMale\n3620 Lili Drive\nNA\nTopeka\nKS\n66675\nShawnee\n\n\n100005\n2000000005\nTurner\nRichard\nS\n2003-11-20\n2024-01-18\nBlood - venous\n&lt; 1\nμg/dL\nMale\n2010 Rodeo Drive\nNA\nMurdock\nKS\n67111\nKingman\n\n\n100006\n2000000006\nCraig\nCharles\nL\n1936-07-05\n2024-01-03\nBlood - capillary\n&lt; 1\nμg/dL\nMale\n601 S Pony Meadows\nNA\nMorland\nKS\n67650\nGraham\n\n\n100007\n2000000007\nStuart\nGerald\nZ\n1969-06-10\n2024-02-15\nBlood - venous\n&lt; 1\nμg/dL\nMale\n606 Aberdeen Street\nNA\nRiverton\nKS\n66770\nCherokee\n\n\n100008\n2000000008\nHernandez\nDeborah\nE\n1958-12-13\n2024-03-11\nBlood - venous\n&lt; 1\nμg/dL\nFemale\n1519 E Mainsgate Road\nNA\nTopeka\nKS\n66620\nShawnee\n\n\n100009\n2000000009\nDuffy\nCharlotte\nJ\n1944-04-15\n2024-02-10\nBlood - venous\n&lt; 1\nμg/dL\nFemale\n4939 Whispering Brook\nNA\nRossville\nKS\n66533\nShawnee\n\n\n100010\n2000000010\nReese\nAdam\nR\n1965-04-09\n2024-03-27\nBlood - capillary\n2\nμg/dL\nMale\n3618 E Sandy Land Road\nNA\nNeosho Rapids\nKS\n66864\nLyon\n\n\n\n\n\n\n\n\n\n\ndata &lt;- data |&gt;\n  mutate(column_name = some_function(existing_column))      # dummy syntax\n\n\nbl_data2 &lt;- bl_data |&gt;\n  mutate(                                                   # for real\n    age = calculate_age(birth_date, collection_date),\n    .after = collection_date\n  )\n\n\n\nCode\nbl_data2 |&gt;\n  my_gt() |&gt;\n  gtExtras::gt_highlight_cols(\n    columns = c(birth_date, collection_date),\n    fill = \"thistle2\"\n  ) |&gt;\n  gtExtras::gt_highlight_cols(\n    columns = c(age),\n    fill = \"palegreen\"\n  )\n\n\n\n\n\n\n\n\nperson_id\npatient_record_number\nlast_name\nfirst_name\nmiddle_name\nbirth_date\ncollection_date\nage\nspecimen_source\nresult_value\nunits\nbirth_sex\ncoll_add_street\ncoll_add_unit\ncoll_add_city\ncoll_add_state\ncoll_add_zip\ncoll_add_county\n\n\n\n\n100001\n2000000001\nPhan\nDonna\nZ\n1959-08-29\n2024-03-03\n64.51198\nBlood - venous\n2\nμg/dL\nFemale\n14170 N St Francis Street\nNA\nWelda\nKS\n66091\nAnderson\n\n\n100002\n2000000002\nCabrera\nSamantha\nU\n2013-09-30\n2024-01-06\n10.26694\nBlood - venous\n1\nμg/dL\nFemale\n806 Levee 27\nNA\nAlmena\nKS\n67622\nNorton\n\n\n100003\n2000000003\nGreene\nJuan\nA\n1931-07-15\n2024-01-01\n92.46543\nBlood - venous\n&lt; 1\nμg/dL\nMale\n718 S Saint Paul Street\nApt 400\nJohnson City\nKS\n67855\nStanton\n\n\n100004\n2000000004\nWebb\nBenjamin\nE\n1956-07-26\n2024-03-06\n67.61123\nBlood - venous\n&lt; 3\nμg/dL\nMale\n3620 Lili Drive\nNA\nTopeka\nKS\n66675\nShawnee\n\n\n100005\n2000000005\nTurner\nRichard\nS\n2003-11-20\n2024-01-18\n20.16153\nBlood - venous\n&lt; 1\nμg/dL\nMale\n2010 Rodeo Drive\nNA\nMurdock\nKS\n67111\nKingman\n\n\n100006\n2000000006\nCraig\nCharles\nL\n1936-07-05\n2024-01-03\n87.49624\nBlood - capillary\n&lt; 1\nμg/dL\nMale\n601 S Pony Meadows\nNA\nMorland\nKS\n67650\nGraham\n\n\n100007\n2000000007\nStuart\nGerald\nZ\n1969-06-10\n2024-02-15\n54.68309\nBlood - venous\n&lt; 1\nμg/dL\nMale\n606 Aberdeen Street\nNA\nRiverton\nKS\n66770\nCherokee\n\n\n100008\n2000000008\nHernandez\nDeborah\nE\n1958-12-13\n2024-03-11\n65.24298\nBlood - venous\n&lt; 1\nμg/dL\nFemale\n1519 E Mainsgate Road\nNA\nTopeka\nKS\n66620\nShawnee\n\n\n100009\n2000000009\nDuffy\nCharlotte\nJ\n1944-04-15\n2024-02-10\n79.82204\nBlood - venous\n&lt; 1\nμg/dL\nFemale\n4939 Whispering Brook\nNA\nRossville\nKS\n66533\nShawnee\n\n\n100010\n2000000010\nReese\nAdam\nR\n1965-04-09\n2024-03-27\n58.96509\nBlood - capillary\n2\nμg/dL\nMale\n3618 E Sandy Land Road\nNA\nNeosho Rapids\nKS\n66864\nLyon"
+  },
+  {
+    "objectID": "slides.html#mutate-across",
+    "href": "slides.html#mutate-across",
+    "title": "Vectorization and iteration in R",
+    "section": "mutate() + across()",
+    "text": "mutate() + across()\nacross() applies the mutate() call to multiple columns at once.\n\nSelect columnsmutate()\n\n\n\nbl_data |&gt;\n  select(starts_with(\"coll_add\")) |&gt;      # tidy selection\n  my_gt()\n\n\n\n\n\n\n\ncoll_add_street\ncoll_add_unit\ncoll_add_city\ncoll_add_state\ncoll_add_zip\ncoll_add_county\n\n\n\n\n14170 N St Francis Street\nNA\nWelda\nKS\n66091\nAnderson\n\n\n806 Levee 27\nNA\nAlmena\nKS\n67622\nNorton\n\n\n718 S Saint Paul Street\nApt 400\nJohnson City\nKS\n67855\nStanton\n\n\n3620 Lili Drive\nNA\nTopeka\nKS\n66675\nShawnee\n\n\n2010 Rodeo Drive\nNA\nMurdock\nKS\n67111\nKingman\n\n\n601 S Pony Meadows\nNA\nMorland\nKS\n67650\nGraham\n\n\n606 Aberdeen Street\nNA\nRiverton\nKS\n66770\nCherokee\n\n\n1519 E Mainsgate Road\nNA\nTopeka\nKS\n66620\nShawnee\n\n\n4939 Whispering Brook\nNA\nRossville\nKS\n66533\nShawnee\n\n\n3618 E Sandy Land Road\nNA\nNeosho Rapids\nKS\n66864\nLyon\n\n\n\n\n\n\n\n\n\n\nbl_data3 &lt;- bl_data |&gt;\n  mutate(across(starts_with(\"coll_add\"), toupper))   # convert to uppercase\n\n\n\nCode\nbl_data3 |&gt;\n  select(starts_with(\"coll_add\")) |&gt;\n  my_gt()\n\n\n\n\n\n\n\n\ncoll_add_street\ncoll_add_unit\ncoll_add_city\ncoll_add_state\ncoll_add_zip\ncoll_add_county\n\n\n\n\n14170 N ST FRANCIS STREET\nNA\nWELDA\nKS\n66091\nANDERSON\n\n\n806 LEVEE 27\nNA\nALMENA\nKS\n67622\nNORTON\n\n\n718 S SAINT PAUL STREET\nAPT 400\nJOHNSON CITY\nKS\n67855\nSTANTON\n\n\n3620 LILI DRIVE\nNA\nTOPEKA\nKS\n66675\nSHAWNEE\n\n\n2010 RODEO DRIVE\nNA\nMURDOCK\nKS\n67111\nKINGMAN\n\n\n601 S PONY MEADOWS\nNA\nMORLAND\nKS\n67650\nGRAHAM\n\n\n606 ABERDEEN STREET\nNA\nRIVERTON\nKS\n66770\nCHEROKEE\n\n\n1519 E MAINSGATE ROAD\nNA\nTOPEKA\nKS\n66620\nSHAWNEE\n\n\n4939 WHISPERING BROOK\nNA\nROSSVILLE\nKS\n66533\nSHAWNEE\n\n\n3618 E SANDY LAND ROAD\nNA\nNEOSHO RAPIDS\nKS\n66864\nLYON"
+  },
+  {
+    "objectID": "slides.html#apply-friends",
+    "href": "slides.html#apply-friends",
+    "title": "Vectorization and iteration in R",
+    "section": "apply() & friends",
+    "text": "apply() & friends\n\n\napply(): modify rows or columns of a dataframe\nlapply(): modify a vector or list\nalso sapply(), vapply(), & mapply()"
+  },
+  {
+    "objectID": "slides.html#lapply",
+    "href": "slides.html#lapply",
+    "title": "Vectorization and iteration in R",
+    "section": "lapply()",
+    "text": "lapply()\nIterate over a vector or list\n\n\nInput: a vector or list\nOutput: a vector or list\nArguments:\n\nX: a vector or list\nFUN: a function\n...: additional arguments to FUN (optional)"
+  },
+  {
+    "objectID": "slides.html#lapply-1",
+    "href": "slides.html#lapply-1",
+    "title": "Vectorization and iteration in R",
+    "section": "lapply()",
+    "text": "lapply()\n\nListlapply()\n\n\n\nl &lt;- list()\n\nfor (i in 1:5) {                             # populate a list\n  l[[i]] &lt;- c(                               # each element contains:\n    sample(colors(), 1),                     #  - a color\n    sample(rownames(alr4::brains), 1),       #  - an animal\n    sample(rownames(alr4::BigMac2003), 1)    #  - a city\n  )\n}\n\nl\n\n[[1]]\n[1] \"skyblue2\"         \"E. American_mole\" \"Riga\"            \n\n[[2]]\n[1] \"gray14\"         \"Golden hamster\" \"Manila\"        \n\n[[3]]\n[1] \"darkorange2\"               \"Lesser short-tailed_shrew\" \"Dublin\"                   \n\n[[4]]\n[1] \"deeppink\"  \"Gray wolf\" \"Sofia\"    \n\n[[5]]\n[1] \"gray59\"    \"Okapi\"     \"Barcelona\"\n\n\n\n\n\nl2 &lt;- lapply(\n  X = l,               # list input\n  FUN = paste,         # function: `paste()`\n  collapse = \"; \"      # additional argument to `paste()`\n)\n\nl2\n\n[[1]]\n[1] \"skyblue2; E. American_mole; Riga\"\n\n[[2]]\n[1] \"gray14; Golden hamster; Manila\"\n\n[[3]]\n[1] \"darkorange2; Lesser short-tailed_shrew; Dublin\"\n\n[[4]]\n[1] \"deeppink; Gray wolf; Sofia\"\n\n[[5]]\n[1] \"gray59; Okapi; Barcelona\""
+  },
+  {
+    "objectID": "slides.html#lapply-custom-function",
+    "href": "slides.html#lapply-custom-function",
+    "title": "Vectorization and iteration in R",
+    "section": "lapply() + custom function",
+    "text": "lapply() + custom function\n\nListFunctionlapply()\n\n\n\nl &lt;- list(                  # create a list of 3 dataframes\n  df1 = mtcars,\n  df2 = dplyr::starwars,\n  df3 = bl_data\n)\n\n\nCode\nfor (i in 1:length(l)) {    # print a section of each table\n  l[[i]][1:3, 1:11] |&gt;\n    my_gt() |&gt;\n    print()\n}\n\n\n\n\n\n\n\nmpg\n\n\ncyl\n\n\ndisp\n\n\nhp\n\n\ndrat\n\n\nwt\n\n\nqsec\n\n\nvs\n\n\nam\n\n\ngear\n\n\ncarb\n\n\n\n\n\n\n21.0\n\n\n6\n\n\n160\n\n\n110\n\n\n3.90\n\n\n2.620\n\n\n16.46\n\n\n0\n\n\n1\n\n\n4\n\n\n4\n\n\n\n\n21.0\n\n\n6\n\n\n160\n\n\n110\n\n\n3.90\n\n\n2.875\n\n\n17.02\n\n\n0\n\n\n1\n\n\n4\n\n\n4\n\n\n\n\n22.8\n\n\n4\n\n\n108\n\n\n93\n\n\n3.85\n\n\n2.320\n\n\n18.61\n\n\n1\n\n\n1\n\n\n4\n\n\n1\n\n\n\n\n\n\n\n\n\n\n\nname\n\n\nheight\n\n\nmass\n\n\nhair_color\n\n\nskin_color\n\n\neye_color\n\n\nbirth_year\n\n\nsex\n\n\ngender\n\n\nhomeworld\n\n\nspecies\n\n\n\n\n\n\nLuke Skywalker\n\n\n172\n\n\n77\n\n\nblond\n\n\nfair\n\n\nblue\n\n\n19\n\n\nmale\n\n\nmasculine\n\n\nTatooine\n\n\nHuman\n\n\n\n\nC-3PO\n\n\n167\n\n\n75\n\n\nNA\n\n\ngold\n\n\nyellow\n\n\n112\n\n\nnone\n\n\nmasculine\n\n\nTatooine\n\n\nDroid\n\n\n\n\nR2-D2\n\n\n96\n\n\n32\n\n\nNA\n\n\nwhite, blue\n\n\nred\n\n\n33\n\n\nnone\n\n\nmasculine\n\n\nNaboo\n\n\nDroid\n\n\n\n\n\n\n\n\n\n\n\nperson_id\n\n\npatient_record_number\n\n\nlast_name\n\n\nfirst_name\n\n\nmiddle_name\n\n\nbirth_date\n\n\ncollection_date\n\n\nspecimen_source\n\n\nresult_value\n\n\nunits\n\n\nbirth_sex\n\n\n\n\n\n\n100001\n\n\n2000000001\n\n\nPhan\n\n\nDonna\n\n\nZ\n\n\n1959-08-29\n\n\n2024-03-03\n\n\nBlood - venous\n\n\n2\n\n\nμg/dL\n\n\nFemale\n\n\n\n\n100002\n\n\n2000000002\n\n\nCabrera\n\n\nSamantha\n\n\nU\n\n\n2013-09-30\n\n\n2024-01-06\n\n\nBlood - venous\n\n\n1\n\n\nμg/dL\n\n\nFemale\n\n\n\n\n100003\n\n\n2000000003\n\n\nGreene\n\n\nJuan\n\n\nA\n\n\n1931-07-15\n\n\n2024-01-01\n\n\nBlood - venous\n\n\n&lt; 1\n\n\nμg/dL\n\n\nMale\n\n\n\n\n\n\n\n\n# custom function to\n#   1) modify column names \n#   2) add a column\n\nfn &lt;- function(df) {\n  colnames(df) &lt;- stringr::str_to_title(colnames(df))\n  df |&gt;\n    mutate(Action = NA, .before = everything())\n}\n\n\n\n\nl2 &lt;- lapply(\n  X = l,               # list input\n  FUN = fn             # function: `fn()`\n)\n\n\nCode\nfor (i in 1:length(l2)) {    # print a section of each table\n  l2[[i]][1:3, 1:12] |&gt;\n    my_gt() |&gt;\n    print()\n}\n\n\n\n\n\n\n\nAction\n\n\nMpg\n\n\nCyl\n\n\nDisp\n\n\nHp\n\n\nDrat\n\n\nWt\n\n\nQsec\n\n\nVs\n\n\nAm\n\n\nGear\n\n\nCarb\n\n\n\n\n\n\nNA\n\n\n21.0\n\n\n6\n\n\n160\n\n\n110\n\n\n3.90\n\n\n2.620\n\n\n16.46\n\n\n0\n\n\n1\n\n\n4\n\n\n4\n\n\n\n\nNA\n\n\n21.0\n\n\n6\n\n\n160\n\n\n110\n\n\n3.90\n\n\n2.875\n\n\n17.02\n\n\n0\n\n\n1\n\n\n4\n\n\n4\n\n\n\n\nNA\n\n\n22.8\n\n\n4\n\n\n108\n\n\n93\n\n\n3.85\n\n\n2.320\n\n\n18.61\n\n\n1\n\n\n1\n\n\n4\n\n\n1\n\n\n\n\n\n\n\n\n\n\n\nAction\n\n\nName\n\n\nHeight\n\n\nMass\n\n\nHair_color\n\n\nSkin_color\n\n\nEye_color\n\n\nBirth_year\n\n\nSex\n\n\nGender\n\n\nHomeworld\n\n\nSpecies\n\n\n\n\n\n\nNA\n\n\nLuke Skywalker\n\n\n172\n\n\n77\n\n\nblond\n\n\nfair\n\n\nblue\n\n\n19\n\n\nmale\n\n\nmasculine\n\n\nTatooine\n\n\nHuman\n\n\n\n\nNA\n\n\nC-3PO\n\n\n167\n\n\n75\n\n\nNA\n\n\ngold\n\n\nyellow\n\n\n112\n\n\nnone\n\n\nmasculine\n\n\nTatooine\n\n\nDroid\n\n\n\n\nNA\n\n\nR2-D2\n\n\n96\n\n\n32\n\n\nNA\n\n\nwhite, blue\n\n\nred\n\n\n33\n\n\nnone\n\n\nmasculine\n\n\nNaboo\n\n\nDroid\n\n\n\n\n\n\n\n\n\n\n\nAction\n\n\nPerson_id\n\n\nPatient_record_number\n\n\nLast_name\n\n\nFirst_name\n\n\nMiddle_name\n\n\nBirth_date\n\n\nCollection_date\n\n\nSpecimen_source\n\n\nResult_value\n\n\nUnits\n\n\nBirth_sex\n\n\n\n\n\n\nNA\n\n\n100001\n\n\n2000000001\n\n\nPhan\n\n\nDonna\n\n\nZ\n\n\n1959-08-29\n\n\n2024-03-03\n\n\nBlood - venous\n\n\n2\n\n\nμg/dL\n\n\nFemale\n\n\n\n\nNA\n\n\n100002\n\n\n2000000002\n\n\nCabrera\n\n\nSamantha\n\n\nU\n\n\n2013-09-30\n\n\n2024-01-06\n\n\nBlood - venous\n\n\n1\n\n\nμg/dL\n\n\nFemale\n\n\n\n\nNA\n\n\n100003\n\n\n2000000003\n\n\nGreene\n\n\nJuan\n\n\nA\n\n\n1931-07-15\n\n\n2024-01-01\n\n\nBlood - venous\n\n\n&lt; 1\n\n\nμg/dL\n\n\nMale"
+  },
+  {
+    "objectID": "slides.html#apply",
+    "href": "slides.html#apply",
+    "title": "Vectorization and iteration in R",
+    "section": "apply()",
+    "text": "apply()\nIterate over a dataframe’s rows, columns, or both\n\n\nInput: a dataframe\nOutput: a vector or list\nArguments:\n\nX: a dataframe\nMARGIN: 1 for rows, 2 for columns (c(1, 2) for both)\nFUN: a function\n...: additional arguments to FUN (optional)"
+  },
+  {
+    "objectID": "slides.html#apply-1",
+    "href": "slides.html#apply-1",
+    "title": "Vectorization and iteration in R",
+    "section": "apply()",
+    "text": "apply()\n\nDataframeRowsColumns\n\n\n\n\n# create a dataframe from a list\n\nl &lt;- list()\n\nfor (i in 1:5) {\n  l[[i]] &lt;- sample(1:100, 10, T)\n}\n\ndf &lt;- as_tibble(do.call(cbind, l))\n\ndf\n\n\n# A tibble: 10 × 5\n      V1    V2    V3    V4    V5\n   &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt; &lt;int&gt;\n 1    21    21     9     5    57\n 2    20    86     8     5    87\n 3    97     3    88    72    77\n 4     5    42    89     9    11\n 5    69    15    64    29    95\n 6    93    89    19    91    92\n 7    58    27    42     4    37\n 8    25    99    47    68    10\n 9    19    76    40    91    67\n10    28    39    69    77    23\n\n\n\n\n\nrow_sums &lt;- apply(\n  X = df,               # dataframe input\n  MARGIN = 1,           # apply over rows\n  FUN = sum             # function: `sum()`\n)\n\nrow_sums\n\n [1] 113 206 337 156 272 384 168 249 293 236\n\n\n\n\n\ncol_sums &lt;- apply(\n  X = df,               # dataframe input\n  MARGIN = 2,           # apply over columns\n  FUN = sum             # function: `sum()`\n)\n\ncol_sums\n\n V1  V2  V3  V4  V5 \n435 497 475 451 556"
+  },
+  {
+    "objectID": "slides.html#apply-vs-mutate",
+    "href": "slides.html#apply-vs-mutate",
+    "title": "Vectorization and iteration in R",
+    "section": "apply() vs mutate()",
+    "text": "apply() vs mutate()\n\n\nmutate(): applies a function to each row separately\napply(): applies a function to each row or each column as a whole"
+  },
+  {
+    "objectID": "slides.html#apply-custom-function",
+    "href": "slides.html#apply-custom-function",
+    "title": "Vectorization and iteration in R",
+    "section": "apply() + custom function",
+    "text": "apply() + custom function\n\nOriginal fnfn within the fnExample\n\n\nCheck if a sequence of dates is in chronological order.\n\ncheck_date_seq            # from ksTracking package\n\nfunction(...) {\n  df &lt;- cbind(...)\n\n  fn &lt;- function(dates) {\n    # Convert a vector of dates to the underlying numeric values, removing NAs\n    seq &lt;- stats::na.omit(as.numeric(as.Date(dates)))\n    # Compare the current order of `seq` to the sorted order (small to large)\n    all(seq == sort(seq))\n  }\n\n  apply(df, 1, fn)\n}\n&lt;bytecode: 0x000001fa8a22df08&gt;\n&lt;environment: namespace:ksTracking&gt;\n\n\n\n\n\nfn &lt;- function(dates) {\n  # Convert a vector of dates to the underlying numeric values, removing NAs\n  seq &lt;- stats::na.omit(as.numeric(as.Date(dates)))\n\n  # Compare the current order of `seq` to the sorted order (small to large)\n  all(seq == sort(seq))\n}\n\n\n\n\ndates1 &lt;- c(\"1800-01-01\", \"1900-01-01\", \"2000-01-01\")   # in chronological order\n\nfn(dates1)\n\n[1] TRUE\n\ndates2 &lt;- c(\"2000-01-01\", \"1900-01-01\", \"1800-01-01\")   # not in chronological order\n\nfn(dates2)\n\n[1] FALSE"
+  },
+  {
+    "objectID": "slides.html#apply-custom-function-1",
+    "href": "slides.html#apply-custom-function-1",
+    "title": "Vectorization and iteration in R",
+    "section": "apply() + custom function",
+    "text": "apply() + custom function\n\nDataframeapply()Bonus\n\n\n\n\ndf &lt;- tibble(\n  birth_date = sample(\n    seq.Date(\n      from = as.Date(\"1930-01-01\"),\n      to = as.Date(\"2020-12-31\"),\n      by = \"day\"\n    ),\n    size = 10,\n    replace = T\n  ),\n  test_date1 = sample(\n    seq.Date(\n      from = as.Date(\"2022-01-01\"),\n      to = as.Date(\"2023-12-21\"),\n      by = \"day\"\n    ),\n    size = 10,\n    replace = T\n  ),\n  test_date2 = sample(\n    seq.Date(\n      from = as.Date(\"2022-01-01\"),\n      to = as.Date(\"2023-12-21\"),\n      by = \"day\"\n    ),\n    size = 10,\n    replace = T\n  ),\n  city = sample(\n    ks_city_zip$city,\n    size = 10,\n    replace = T\n  ),\n  state = \"KS\"\n)\n\ndf |&gt; my_gt()\n\n\n\n\n\n\n\n\nbirth_date\ntest_date1\ntest_date2\ncity\nstate\n\n\n\n\n1968-03-14\n2022-05-21\n2022-08-07\nBrownell\nKS\n\n\n1935-04-26\n2022-08-18\n2023-12-14\nSterling\nKS\n\n\n1998-08-08\n2022-08-14\n2022-10-04\nConway\nKS\n\n\n1984-04-17\n2022-12-26\n2022-01-05\nGrenola\nKS\n\n\n1995-12-06\n2023-11-28\n2022-11-25\nMission Hills\nKS\n\n\n1995-10-27\n2022-04-14\n2022-04-24\nWilsey\nKS\n\n\n1996-10-10\n2022-01-27\n2022-11-05\nLevant\nKS\n\n\n1945-03-02\n2023-02-03\n2023-07-19\nBeeler\nKS\n\n\n1968-05-27\n2023-10-26\n2023-03-13\nBellaire\nKS\n\n\n1953-06-23\n2022-09-12\n2022-12-19\nOverland Park\nKS\n\n\n\n\n\n\n\n\n\n\ndf$correct_date_seq &lt;- apply(\n  X = df[, 1:3],                   # note partial dataframe input\n  MARGIN = 1,                      # apply over rows\n  FUN = fn                         # function: `fn()'\n)\n\ndf |&gt; my_gt()\n\n\n\n\n\n\n\nbirth_date\ntest_date1\ntest_date2\ncity\nstate\ncorrect_date_seq\n\n\n\n\n1968-03-14\n2022-05-21\n2022-08-07\nBrownell\nKS\nTRUE\n\n\n1935-04-26\n2022-08-18\n2023-12-14\nSterling\nKS\nTRUE\n\n\n1998-08-08\n2022-08-14\n2022-10-04\nConway\nKS\nTRUE\n\n\n1984-04-17\n2022-12-26\n2022-01-05\nGrenola\nKS\nFALSE\n\n\n1995-12-06\n2023-11-28\n2022-11-25\nMission Hills\nKS\nFALSE\n\n\n1995-10-27\n2022-04-14\n2022-04-24\nWilsey\nKS\nTRUE\n\n\n1996-10-10\n2022-01-27\n2022-11-05\nLevant\nKS\nTRUE\n\n\n1945-03-02\n2023-02-03\n2023-07-19\nBeeler\nKS\nTRUE\n\n\n1968-05-27\n2023-10-26\n2023-03-13\nBellaire\nKS\nFALSE\n\n\n1953-06-23\n2022-09-12\n2022-12-19\nOverland Park\nKS\nTRUE\n\n\n\n\n\n\n\n\n\nPackage the date function and apply() together\n\nfn2 &lt;- function(...) {      # `fn2()` is vectorized: it takes vectors as args,\n  df &lt;- cbind(...)          # and outputs a vector of the same length\n\n  fn1 &lt;- function(dates) {\n    seq &lt;- stats::na.omit(as.numeric(as.Date(dates)))\n    all(seq == sort(seq))\n  }\n\n  apply(df, 1, fn)\n}\n\ndf$correct_date_seq2 &lt;- fn2(df$birth_date, df$test_date1, df$test_date2)\n\ndf |&gt; my_gt()\n\n\n\n\n\n\n\nbirth_date\ntest_date1\ntest_date2\ncity\nstate\ncorrect_date_seq\ncorrect_date_seq2\n\n\n\n\n1968-03-14\n2022-05-21\n2022-08-07\nBrownell\nKS\nTRUE\nTRUE\n\n\n1935-04-26\n2022-08-18\n2023-12-14\nSterling\nKS\nTRUE\nTRUE\n\n\n1998-08-08\n2022-08-14\n2022-10-04\nConway\nKS\nTRUE\nTRUE\n\n\n1984-04-17\n2022-12-26\n2022-01-05\nGrenola\nKS\nFALSE\nFALSE\n\n\n1995-12-06\n2023-11-28\n2022-11-25\nMission Hills\nKS\nFALSE\nFALSE\n\n\n1995-10-27\n2022-04-14\n2022-04-24\nWilsey\nKS\nTRUE\nTRUE\n\n\n1996-10-10\n2022-01-27\n2022-11-05\nLevant\nKS\nTRUE\nTRUE\n\n\n1945-03-02\n2023-02-03\n2023-07-19\nBeeler\nKS\nTRUE\nTRUE\n\n\n1968-05-27\n2023-10-26\n2023-03-13\nBellaire\nKS\nFALSE\nFALSE\n\n\n1953-06-23\n2022-09-12\n2022-12-19\nOverland Park\nKS\nTRUE\nTRUE"
+  },
+  {
+    "objectID": "slides.html#purrrmap",
+    "href": "slides.html#purrrmap",
+    "title": "Vectorization and iteration in R",
+    "section": "purrr::map()",
+    "text": "purrr::map()\n\nSpecsListCompare use\n\n\n\n\n\nlapply()\n\nInput: a vector or list\nOutput: a vector or list\nArguments:\n\nX: a vector or list\nFUN: a function\n...: additional arguments to FUN (optional)\n\n\n\n\n\nmap()\n\nInput: a vector or list\nOutput: a vector or list\nArguments:\n\n.x: a vector or list\n.f: a function\n...: additional arguments to .f (optional)\n\n\n\n\n\n\n\nl &lt;- list()\n\nfor (i in 1:5) {                             # populate a list\n  l[[i]] &lt;- c(                               # each element contains:\n    sample(colors(), 1),                     #  - a color\n    sample(rownames(alr4::brains), 1),       #  - an animal\n    sample(rownames(alr4::BigMac2003), 1)    #  - a city\n  )\n}\n\nl\n\n[[1]]\n[1] \"dimgrey\"   \"Baboon\"    \"Barcelona\"\n\n[[2]]\n[1] \"green\"         \"Big brown_bat\" \"Oslo\"         \n\n[[3]]\n[1] \"lemonchiffon3\" \"Horse\"         \"Budapest\"     \n\n[[4]]\n[1] \"firebrick4\"     \"Asian elephant\" \"Istanbul\"      \n\n[[5]]\n[1] \"lightsalmon2\"        \"N. American_opossum\" \"Barcelona\"          \n\n\n\n\n\n\n\nl2 &lt;- lapply(\n  X = l,\n  FUN = paste,\n  collapse = \"; \"\n)\n\nl2\n\n[[1]]\n[1] \"dimgrey; Baboon; Barcelona\"\n\n[[2]]\n[1] \"green; Big brown_bat; Oslo\"\n\n[[3]]\n[1] \"lemonchiffon3; Horse; Budapest\"\n\n[[4]]\n[1] \"firebrick4; Asian elephant; Istanbul\"\n\n[[5]]\n[1] \"lightsalmon2; N. American_opossum; Barcelona\"\n\n\n\n\nl3 &lt;- map(\n  .x = l,\n  .f = paste,\n  collapse = \"; \"\n)\n\nl3\n\n[[1]]\n[1] \"dimgrey; Baboon; Barcelona\"\n\n[[2]]\n[1] \"green; Big brown_bat; Oslo\"\n\n[[3]]\n[1] \"lemonchiffon3; Horse; Budapest\"\n\n[[4]]\n[1] \"firebrick4; Asian elephant; Istanbul\"\n\n[[5]]\n[1] \"lightsalmon2; N. American_opossum; Barcelona\""
+  },
+  {
+    "objectID": "slides.html#map-friends",
+    "href": "slides.html#map-friends",
+    "title": "Vectorization and iteration in R",
+    "section": "map() & friends",
+    "text": "map() & friends\nComing…"
+  },
+  {
+    "objectID": "slides.html#summary",
+    "href": "slides.html#summary",
+    "title": "Vectorization and iteration in R",
+    "section": "Summary",
+    "text": "Summary\nRecommendations for when to use a given method:\n\n\nmutate() is great for creating new columns or for modifying existing columns of a dataframe\napply() is great when the input is a dataframe row and you want a column, vector, or list as output\nlapply() and map() are great for vector or list input and list output\nOther map() functions are great for multiple vector or list inputs\n\n\nCaveat: My recs are just to get you started. You’ll find your own best use cases!"
+  },
+  {
+    "objectID": "slides.html#list-wrangling",
+    "href": "slides.html#list-wrangling",
+    "title": "Vectorization and iteration in R",
+    "section": "List wrangling",
+    "text": "List wrangling\n\n\nunlist(): converts a list into a vector\nappend(): adds elements to a list\ncompact(): drops null elements from a list\nlist_rbind(): flattens a list of dataframe rows into a single dataframe\n\n\nSee more on the purrr cheatsheet."
+  },
+  {
+    "objectID": "slides.html#workflow",
+    "href": "slides.html#workflow",
+    "title": "Vectorization and iteration in R",
+    "section": "Workflow",
+    "text": "Workflow\n\nWhen in doubt, start with a loop.\nIf the operation you want to iterate or vectorize has multiple steps, write a custom function.\nIf you decide to use something other than a loop, consider what you need as your input(s) and the shape you need your output to be.\nIn general, write code so that it’s as easy as possible to troubleshoot.\n\nMake it easy to see object values in your environment\nPrint to the console as a way of checking values\nUse RStudio’s debugging tools (breakpoints, debugonce(), browser())"
+  },
+  {
+    "objectID": "slides.html#resources",
+    "href": "slides.html#resources",
+    "title": "Vectorization and iteration in R",
+    "section": "Resources",
+    "text": "Resources\n\n\nRUG SharePoint site (presentations on loops, custom functions)\nR for Data Science: Iteration\nThe Epidemiologist R Handbook: Iteration, loops, and lists\nmutate() documentation\nacross() documentation\nTidy selection in dplyr functions\npurrr package & cheatsheet\nDataCamp apply() tutorial\nAnother apply() tutorial"
+  }
+]
