@@ -1,0 +1,6 @@
+project:
+  title: "presentation-vectorization"
+  type: website
+  output-dir: docs
+
+

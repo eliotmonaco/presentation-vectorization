@@ -1,0 +1,1102 @@
+---
+title: "Vectorization and iteration in R"
+author: "Eliot Monaco"
+date: "4/8/2024"
+format:
+  revealjs:
+    theme: dark
+    highlight-style: github
+    css: styles.css
+    width: 1300
+    slide-number: true
+    incremental: true
+    code-overflow: "wrap"
+    preview-links: true
+    scrollable: true
+    chalkboard:
+      buttons: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = TRUE,
+  R.options = list(width = 120)
+)
+```
+
+```{r include=FALSE}
+source("fn.R")
+```
+
+## Vectorization and iteration
+
+What does it mean?
+
+- **Iteration**: performing the same operation/function(s) multiple times
+- **Vectorization**: function input is a vector, function output is a vector
+
+## Outline
+
+- Vector basics
+- Methods to vectorize your code
+    + loops, `dplyr::mutate()`, `apply()` & friends, `purrr::map()` & friends
+- Useful workflows for introducing vectorization
+
+# Vector basics
+
+## What is a vector?
+
+- A data structure (container) with one dimension
+- Property = length
+- Types
+    + Atomic vector (one data type)
+    + List (multiple data types)
+
+## Vector types
+
+::::: {#row1}
+:::: {.columns}
+::: {.column .nonincremental width="50%"}
+
+Atomic vector
+
+* elements are the same data type
+
+:::
+::: {.column width="50%"}
+
+![numeric vector](images/numeric-vector.png)
+
+![character vector](images/character-vector.png)
+
+:::
+::::
+:::::
+
+::::: {#row2}
+:::: {.columns}
+::: {.column .nonincremental width="50%"}
+
+List
+
+* elements can be different data types and data structures
+
+:::
+::: {.column width="50%"}
+
+![](images/list.png)
+
+:::
+::::
+:::::
+
+## Atomic vectors
+
+`c()` creates atomic vectors.
+
+```{r}
+x <- c("a", "b", "c", "apple", "banana", "coconut")    # character vector
+y <- c(10, 100, 1000, 10000, 100000)                   # numeric vector
+z <- c(TRUE, TRUE, FALSE, FALSE)                       # logical vector
+```
+
+```{r}
+class(x)
+class(y)
+class(z)
+```
+
+## Lists
+
+`list()` creates lists.
+
+```{r}
+x <- c("a", "b", "c", "apple", "banana", "coconut")    # character vector
+y <- c(10, 100, 1000, 10000, 100000)                   # numeric vector
+z <- c(TRUE, TRUE, FALSE, FALSE)                       # logical vector
+
+my_list <- list(
+  element1 = x,
+  element2 = y,
+  element3 = z
+)
+```
+
+```{r}
+str(my_list)
+```
+
+## Um actually
+
+*Technically...*
+
+:::{.nonincremental}
+* "vector" includes both atomic vectors and lists
+* dataframe columns are atomic vectors
+:::
+
+. . .
+
+*But colloquially...*
+
+:::{.nonincremental}
+* "vector" means an atomic vector
+* "list" means a list
+:::
+
+# Indexing: How to access elements of vectors
+
+## Indexing vectors
+
+```{r}
+elements <- c("water", "earth", "fire", "air")
+```
+
+. . .
+
+Use square brackets `[]` to access specific elements of atomic vectors by their numeric position.
+
+. . .
+
+```{r}
+elements[3]
+```
+
+. . .
+
+```{r}
+elements[1:3]
+```
+
+## Assign & subtract
+
+```{r}
+elements <- c("water", "earth", "fire", "air")
+```
+
+. . .
+
+Assignment by indexing
+
+```{r}
+elements[5] <- "cheese"
+
+elements
+```
+
+. . .
+
+Subtraction by indexing
+
+```{r}
+elements <- elements[-5]
+
+elements
+```
+
+## Numeric vs logical indexing
+
+```{r}
+elements <- c("water", "earth", "fire", "air")
+```
+
+Vectors are indexed with other vectors.
+
+. . .
+
+```{r}
+elements[c(1, 4)]               # numeric vector
+```
+
+. . .
+
+```{r}
+elements[c(T, F, F, T)]         # logical vector
+```
+
+## Numeric vs logical indexing
+
+```{r}
+elements <- c("water", "earth", "fire", "air")
+```
+
+If the indexing vector isn't the same length as the vector being indexed, the indexing vector will be recycled.
+
+. . .
+
+```{r}
+elements[c(T, F)]
+```
+
+```{r}
+elements[c(T, F, F)]
+```
+
+## Index with expressions
+
+```{r}
+elements <- c("water", "earth", "fire", "air")
+```
+
+If the value of an expression is a numeric or logical vector, it can be used to index.
+
+. . .
+
+```{r}
+2 + 2                  # numeric expression
+elements[2 + 2]
+```
+
+## Index with expressions
+
+```{r}
+elements <- c("water", "earth", "fire", "air")
+```
+
+If the value of an expression is a numeric or logical vector, it can be used to index.
+
+```{r}
+stringr::str_detect(elements, "^e|e$")                  # logical expression
+elements[stringr::str_detect(elements, "^e|e$")]
+```
+
+## Indexing lists
+
+:::: {.columns}
+::: {.column}
+
+Single square brackets `[]`
+
+```{r}
+my_list[1]
+class(my_list[1])
+```
+
+:::
+::: {.column}
+
+Double square brackets `[[]]`
+
+```{r}
+my_list[[1]]
+class(my_list[[1]])
+```
+
+:::
+::::
+
+## Indexing lists
+
+Access list elements by name using `$` (equivalent to `[[]]`).
+
+:::: {.columns}
+::: {.column}
+
+```{r}
+my_list$element1
+class(my_list$element1)
+```
+
+:::
+::: {.column}
+
+```{r}
+my_list[["element1"]]
+class(my_list[["element1"]])
+```
+
+:::
+::::
+
+# Methods: Using vectorization and iteration in your code
+
+## Methods
+
+::: {.nonincremental}
+- Loops
+- `dplyr::mutate()`
+- `apply()` & friends
+- `purrr::map()` & friends
+:::
+
+## Loops
+
+::: {.nonincremental}
+- for & while
+- extremely useful and versatile
+- covered in a prior RUG workshop
+- loops will return when we talk about workflow
+:::
+
+## `dplyr::mutate()`
+
+::: {.nonincremental}
+- iterate over all rows of a dataframe by apply a function to a column or columns
+- create new columns or modify existing columns
+:::
+
+[`mutate()` documentation](https://dplyr.tidyverse.org/reference/mutate.html#ref-usage){preview-link="true"}
+
+## Syntax
+
+```{r eval=FALSE}
+data <- data |>
+  mutate(column_name = some_function(existing_column))      # dummy syntax
+```
+
+## `mutate()`: create a new column
+
+Calculate age from two dates.
+
+```{r}
+library(tidyverse)
+library(ksTracking)
+
+date1 <- as.Date("1980-08-01")
+date2 <- as.Date(Sys.Date())
+
+calculate_age(date1, date2)         # the function by itself
+```
+
+## `mutate()`: create a new column
+
+::: {.panel-tabset}
+
+### Dataframe
+
+Simulate a data set with two date variables: `birth_date` and `collection_date`.
+
+```{r}
+bl_data <- sim_bl_data(n_tested = 10, test_range = c("2024-01-01", "2024-03-31"))
+```
+
+```{r}
+#| code-fold: true
+
+bl_data |>
+  my_gt() |>
+  gtExtras::gt_highlight_cols(
+    columns = c(birth_date, collection_date),
+    fill = "thistle2"
+  )
+```
+
+### `mutate()`
+
+```{r eval=FALSE}
+data <- data |>
+  mutate(column_name = some_function(existing_column))      # dummy syntax
+```
+
+```{r}
+bl_data2 <- bl_data |>
+  mutate(                                                   # for real
+    age = calculate_age(birth_date, collection_date),
+    .after = collection_date
+  )
+```
+
+```{r}
+#| code-fold: true
+
+bl_data2 |>
+  my_gt() |>
+  gtExtras::gt_highlight_cols(
+    columns = c(birth_date, collection_date),
+    fill = "thistle2"
+  ) |>
+  gtExtras::gt_highlight_cols(
+    columns = c(age),
+    fill = "palegreen"
+  )
+```
+
+:::
+
+## `mutate()` + `across()`
+
+`across()` applies the `mutate()` call to multiple columns at once.
+
+::: {.panel-tabset}
+
+### Select columns
+
+```{r}
+bl_data |>
+  select(starts_with("coll_add")) |>      # tidy selection
+  my_gt()
+```
+
+### `mutate()`
+
+```{r}
+bl_data3 <- bl_data |>
+  mutate(across(starts_with("coll_add"), toupper))   # convert to uppercase
+```
+
+```{r}
+#| code-fold: true
+
+bl_data3 |>
+  select(starts_with("coll_add")) |>
+  my_gt()
+```
+
+:::
+
+## `apply()` & friends
+
+::: {.nonincremental}
+- `apply()`: modify rows or columns of a dataframe
+- `lapply()`: modify a vector or list
+- also `sapply()`, `vapply()`, & `mapply()`
+:::
+
+## `lapply()`
+
+Iterate over a vector or list
+
+::: {.nonincremental}
+- Input: a vector or list
+- Output: a vector or list
+- Arguments:
+    + `X`: a vector or list
+    + `FUN`: a function
+    + `...`: additional arguments to `FUN` (optional)
+:::
+
+## `lapply()`
+
+::: {.panel-tabset}
+
+### List
+
+```{r}
+l <- list()
+
+for (i in 1:5) {                             # populate a list
+  l[[i]] <- c(                               # each element contains:
+    sample(colors(), 1),                     #  - a color
+    sample(rownames(alr4::brains), 1),       #  - an animal
+    sample(rownames(alr4::BigMac2003), 1)    #  - a city
+  )
+}
+
+l
+```
+
+### `lapply()`
+
+```{r}
+l2 <- lapply(
+  X = l,               # list input
+  FUN = paste,         # function: `paste()`
+  collapse = "; "      # additional argument to `paste()`
+)
+
+l2
+```
+
+:::
+
+## `lapply()` + custom function
+
+::: {.panel-tabset}
+
+### List
+
+```{r}
+l <- list(                  # create a list of 3 dataframes
+  df1 = mtcars,
+  df2 = dplyr::starwars,
+  df3 = bl_data
+)
+```
+
+```{r results='asis'}
+#| code-fold: true
+
+for (i in 1:length(l)) {    # print a section of each table
+  l[[i]][1:3, 1:11] |>
+    my_gt() |>
+    print()
+}
+```
+
+### Function
+
+```{r}
+# custom function to
+#   1) modify column names 
+#   2) add a column
+
+fn <- function(df) {
+  colnames(df) <- stringr::str_to_title(colnames(df))
+  df |>
+    mutate(Action = NA, .before = everything())
+}
+```
+
+### `lapply()`
+
+```{r}
+l2 <- lapply(
+  X = l,               # list input
+  FUN = fn             # function: `fn()`
+)
+```
+
+```{r results='asis'}
+#| code-fold: true
+
+for (i in 1:length(l2)) {    # print a section of each table
+  l2[[i]][1:3, 1:12] |>
+    my_gt() |>
+    print()
+}
+```
+
+:::
+
+## `apply()`
+
+Iterate over a dataframe's rows, columns, or both
+
+::: {.nonincremental}
+- Input: a dataframe
+- Output: a vector or list
+- Arguments:
+    + `X`: a dataframe
+    + `MARGIN`: `1` for rows, `2` for columns (`c(1, 2)` for both)
+    + `FUN`: a function
+    + `...`: additional arguments to `FUN` (optional)
+:::
+
+## `apply()`
+
+::: {.panel-tabset}
+
+### Dataframe
+
+```{r}
+#| output-location: column
+
+# create a dataframe from a list
+
+l <- list()
+
+for (i in 1:5) {
+  l[[i]] <- sample(1:100, 10, T)
+}
+
+df <- as_tibble(do.call(cbind, l))
+
+df
+```
+
+### Rows
+
+```{r}
+row_sums <- apply(
+  X = df,               # dataframe input
+  MARGIN = 1,           # apply over rows
+  FUN = sum             # function: `sum()`
+)
+
+row_sums
+```
+
+### Columns
+
+```{r}
+col_sums <- apply(
+  X = df,               # dataframe input
+  MARGIN = 2,           # apply over columns
+  FUN = sum             # function: `sum()`
+)
+
+col_sums
+```
+
+:::
+
+## `apply()` vs `mutate()`
+
+::: {.nonincremental}
+- `mutate()`: applies a function to each row separately
+- `apply()`: applies a function to each row or each column as a whole
+:::
+
+## `apply()` + custom function
+
+::: {.panel-tabset}
+
+### Original fn
+
+Check if a sequence of dates is in chronological order.
+
+```{r}
+check_date_seq            # from ksTracking package
+```
+
+### fn within the fn
+
+```{r}
+fn <- function(dates) {
+  # Convert a vector of dates to the underlying numeric values, removing NAs
+  seq <- stats::na.omit(as.numeric(as.Date(dates)))
+
+  # Compare the current order of `seq` to the sorted order (small to large)
+  all(seq == sort(seq))
+}
+```
+
+### Example
+
+```{r}
+dates1 <- c("1800-01-01", "1900-01-01", "2000-01-01")   # in chronological order
+
+fn(dates1)
+
+dates2 <- c("2000-01-01", "1900-01-01", "1800-01-01")   # not in chronological order
+
+fn(dates2)
+```
+
+:::
+
+## `apply()` + custom function
+
+::: {.panel-tabset}
+
+### Dataframe
+
+```{r}
+#| output-location: column
+
+df <- tibble(
+  birth_date = sample(
+    seq.Date(
+      from = as.Date("1930-01-01"),
+      to = as.Date("2020-12-31"),
+      by = "day"
+    ),
+    size = 10,
+    replace = T
+  ),
+  test_date1 = sample(
+    seq.Date(
+      from = as.Date("2022-01-01"),
+      to = as.Date("2023-12-21"),
+      by = "day"
+    ),
+    size = 10,
+    replace = T
+  ),
+  test_date2 = sample(
+    seq.Date(
+      from = as.Date("2022-01-01"),
+      to = as.Date("2023-12-21"),
+      by = "day"
+    ),
+    size = 10,
+    replace = T
+  ),
+  city = sample(
+    ks_city_zip$city,
+    size = 10,
+    replace = T
+  ),
+  state = "KS"
+)
+
+df |> my_gt()
+```
+
+### `apply()`
+
+```{r}
+df$correct_date_seq <- apply(
+  X = df[, 1:3],                   # note partial dataframe input
+  MARGIN = 1,                      # apply over rows
+  FUN = fn                         # function: `fn()'
+)
+
+df |> my_gt()
+```
+
+### Bonus
+
+Package the date function and `apply()` together
+
+```{r}
+fn2 <- function(...) {      # `fn2()` is vectorized: it takes vectors as args,
+  df <- cbind(...)          # and outputs a vector of the same length
+
+  fn1 <- function(dates) {
+    seq <- stats::na.omit(as.numeric(as.Date(dates)))
+    all(seq == sort(seq))
+  }
+
+  apply(df, 1, fn)
+}
+
+df$correct_date_seq2 <- fn2(df$birth_date, df$test_date1, df$test_date2)
+
+df |> my_gt()
+```
+
+:::
+
+## `purrr::map()`
+
+:::::: {.panel-tabset}
+
+### Specs
+
+::::: {.columns}
+:::: {.column .nonincremental width="50%"}
+::: {.nonincremental}
+
+`lapply()`
+
+- Input: a vector or list
+- Output: a vector or list
+- Arguments:
+    + `X`: a vector or list
+    + `FUN`: a function
+    + `...`: additional arguments to `FUN` (optional)
+
+:::
+::::
+
+:::: {.column .nonincremental width="50%"}
+::: {.nonincremental}
+
+`map()`
+
+- Input: a vector or list
+- Output: a vector or list
+- Arguments:
+    + `.x`: a vector or list
+    + `.f`: a function
+    + `...`: additional arguments to `.f` (optional)
+
+:::
+::::
+:::::
+
+### List
+
+```{r}
+l <- list()
+
+for (i in 1:5) {                             # populate a list
+  l[[i]] <- c(                               # each element contains:
+    sample(colors(), 1),                     #  - a color
+    sample(rownames(alr4::brains), 1),       #  - an animal
+    sample(rownames(alr4::BigMac2003), 1)    #  - a city
+  )
+}
+
+l
+```
+
+### Compare use
+
+::::: {.columns}
+:::: {.column .nonincremental width="50%"}
+
+```{r}
+l2 <- lapply(
+  X = l,
+  FUN = paste,
+  collapse = "; "
+)
+
+l2
+```
+
+::::
+:::: {.column .nonincremental width="50%"}
+
+```{r}
+l3 <- map(
+  .x = l,
+  .f = paste,
+  collapse = "; "
+)
+
+l3
+```
+
+::::
+:::::
+::::::
+
+## `map()` & friends
+
+Coming...
+
+```{r}
+
+```
+
+
+<!-- ## `lapply()` basics -->
+
+<!-- Input: a vector or list. Output: a vector or list. -->
+
+<!-- ::: {.sublist .nonincremental} -->
+<!-- `lapply()` arguments: -->
+
+<!-- - `X`: a vector or list -->
+<!-- - `FUN`: a function -->
+<!-- - `...`: additional (optional) arguments to `FUN` -->
+<!-- ::: -->
+
+<!-- ## `lapply()`: list input, list output -->
+
+<!-- ***Example:*** Convert a nested list to a dataframe. -->
+
+<!-- Create a nested list. -->
+
+<!-- ```{r} -->
+<!-- name <- c("Katara", "Aang", "Sokka", "Toph", "Zuko") -->
+<!-- home <- c( -->
+<!--   "Southern Water Tribe", "Southern Air Temple", -->
+<!--   "Southern Water Tribe", "Earth Kingdom", "Fire Nation" -->
+<!-- ) -->
+<!-- age <- c(14, 112, 15, 12, 16) -->
+<!-- element <- c("water", "air", NA, "earth", "fire") -->
+
+<!-- avatar_list <- list() -->
+
+<!-- for (i in 1:length(name)) { -->
+<!--   avatar_list[[i]] <- list( -->
+<!--     name = name[i], home = home[i], age = age[i], element = element[i] -->
+<!--   ) -->
+<!-- } -->
+<!-- ``` -->
+
+<!-- ## `lapply()`: list input, list output -->
+
+<!-- ***Example:*** Convert a nested list to a dataframe. -->
+
+<!-- ```{r} -->
+<!-- str(avatar_list) -->
+<!-- ``` -->
+
+<!-- ## `lapply()`: list input, list output -->
+
+<!-- ***Example:*** Convert a nested list to a dataframe. -->
+
+<!-- Use `lapply()` to call `as_tibble()`, turning each list element into a one-row dataframe. -->
+
+<!-- ```{r} -->
+<!-- avatar_list2 <- lapply(X = avatar_list, FUN = as_tibble) -->
+<!-- ``` -->
+
+<!-- . . . -->
+
+<!-- :::: {.columns} -->
+<!-- ::: {.column width="50%"} -->
+<!-- ```{r} -->
+<!-- # Input -->
+<!-- str(avatar_list) -->
+<!-- ``` -->
+<!-- ::: -->
+<!-- ::: {.column width="50%"} -->
+<!-- ```{r} -->
+<!-- # Output -->
+<!-- str(avatar_list2) -->
+<!-- ``` -->
+<!-- ::: -->
+<!-- :::: -->
+
+<!-- ## `lapply()`: list input, list output -->
+
+<!-- ***Example:*** Convert a nested list to a dataframe. -->
+
+<!-- The new list can now be converted to a dataframe using `purrr::list_rbind()`. -->
+
+<!-- ```{r} -->
+<!-- avatar_df <- list_rbind(avatar_list2) -->
+<!-- ``` -->
+<!-- . . . -->
+<!-- ```{r} -->
+<!-- head(avatar_df) %>% gfx_kable() -->
+<!-- ``` -->
+
+<!-- ## `lapply()`: list input, list output -->
+
+<!-- ***Example:*** Convert a nested list to a dataframe. -->
+
+<!-- The whole thing: -->
+
+<!-- ```{r} -->
+<!-- avatar_list2 <- lapply(X = avatar_list, FUN = as_tibble) -->
+
+<!-- avatar_df <- list_rbind(avatar_list2) -->
+<!-- ``` -->
+
+<!-- ## `lapply()`: list input, list output -->
+
+<!-- Using `...` to pass additional arguments to `FUN`: -->
+
+<!-- ```{r} -->
+<!-- avatar_list2 <- lapply( -->
+<!--   X = avatar_list, FUN = as_tibble, -->
+<!--   .name_repair = function(x) paste0(x, "_season_1")    # New argument, modifies column names -->
+<!-- ) -->
+
+<!-- avatar_df <- list_rbind(avatar_list2) -->
+<!-- ``` -->
+<!-- . . . -->
+<!-- ```{r} -->
+<!-- head(avatar_df) %>% gfx_kable() -->
+<!-- ``` -->
+
+<!-- ## `map()` -->
+
+<!-- `map()` (purrr) is essentially the same as `lapply()`. -->
+
+<!-- ```{r} -->
+<!-- avatar_list2 <- lapply(X = avatar_list, FUN = as_tibble) -->
+
+<!-- avatar_list3 <- map(.x = avatar_list, .f = as_tibble) -->
+
+<!-- all.equal(avatar_list2, avatar_list3) -->
+<!-- ``` -->
+
+<!-- . . . -->
+
+<!-- ::: {.sublist} -->
+<!-- Variations for different types of input and output, for example: -->
+
+<!-- - `map2()`: two inputs (`.x` & `.y`), e.g., two vectors or lists of the same length -->
+<!-- - `pmap()`: input is a list (`.l`), each element of which is a vector passed as an argument to `.f` -->
+<!-- ::: -->
+
+<!-- ## `map2()`: two lists as input, list output {.scrollable} -->
+
+<!-- ***Example:*** Subset each dataframe in a list. -->
+
+<!-- ```{r} -->
+<!-- # A list of dataframes with characters and attributes from cool TV shows -->
+
+<!-- shows <- list( -->
+<!--   avatar = tibble(                                                       # Dataframe 1 -->
+<!--     name = c("Katara", "Aang", "Sokka", "Toph", "Zuko"), -->
+<!--     home = c( -->
+<!--       "Southern Water Tribe", "Southern Air Temple", -->
+<!--       "Southern Water Tribe", "Earth Kingdom", "Fire Nation" -->
+<!--     ), -->
+<!--     age = c(14, 112, 15, 12, 16), -->
+<!--     element = c("water", "air", "boomerang", "earth", "fire") -->
+<!--   ), -->
+<!--   she_ra = tibble(                                                       # Dataframe 2 -->
+<!--     name = c("Adora", "Glimmer", "Bow", "Catra", "Scorpia"), -->
+<!--     affiliation = c( -->
+<!--       "Princess Alliance", "Princess Alliance", -->
+<!--       "Princess Alliance", "Horde", "Horde" -->
+<!--     ), -->
+<!--     species = c( -->
+<!--       "First One", "Etherian", "Etherian", -->
+<!--       "feline humanoid", "Scorpioni" -->
+<!--     ) -->
+<!--   ), -->
+<!--   lower_decks = tibble(                                                  # Dataframe 3 -->
+<!--     name = c("Mariner", "Boimler", "Tendi", "Rutherford"), -->
+<!--     division = c("command", "command", "science", "engineering"), -->
+<!--     rank = c( -->
+<!--       "lieutenant junior grade", "lieutenant junior grade", -->
+<!--       "lieutenant junior grade", "lieutenant junior grade" -->
+<!--     ) -->
+<!--   ) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # A list of dataframes from the same shows but with some new characters -->
+
+<!-- shows2 <- list( -->
+<!--   avatar = tibble(                                                       # Dataframe 1 -->
+<!--     name = c("Zuko", "Azula", "Iroh"), -->
+<!--     home = c("Fire Nation", "Fire Nation", "Fire Nation"), -->
+<!--     age = c(16, 14, 66), -->
+<!--     element = c("fire", "fire", "fire") -->
+<!--   ), -->
+<!--   she_ra = tibble(                                                       # Dataframe 2 -->
+<!--     name = c("Hordak", "Catra", "Scorpia"), -->
+<!--     affiliation = c("Horde", "Horde", "Horde"), -->
+<!--     species = c("clone", "feline humanoid", "Scorpioni") -->
+<!--   ), -->
+<!--   lower_decks = tibble(                                                  # Dataframe 3 -->
+<!--     name = c("Mariner", "Boimler"), -->
+<!--     division = c("command", "command"), -->
+<!--     rank = c("lieutenant junior grade", "lieutenant junior grade") -->
+<!--   ) -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ## `map2()`: two lists as input, list output -->
+
+<!-- ***Example:*** Subset each dataframe in a list. -->
+
+<!-- `anti_join()` (dplyr) returns the rows in `x` that are not in `y`. -->
+
+<!-- . . . -->
+<!-- ```{r} -->
+<!-- shows_new <- map2(shows2, shows, anti_join, by = colnames(x)) -->
+
+<!-- str(shows_new) -->
+<!-- ``` -->
+
+## Summary
+
+Recommendations for when to use a given method:
+
+::: {.nonincremental}
+* `mutate()` is great for creating new columns or for modifying existing columns of a dataframe
+* `apply()` is great when the input is a dataframe row and you want a column, vector, or list as output
+* `lapply()` and `map()` are great for vector or list input and list output
+* Other `map()` functions are great for multiple vector or list inputs
+:::
+
+**Caveat**: My recs are just to get you started. You'll find your own best use cases!
+
+## List wrangling
+
+::: {.nonincremental}
+* `unlist()`: converts a list into a vector
+* `append()`: adds elements to a list
+* `compact()`: drops null elements from a list
+* `list_rbind()`: flattens a list of dataframe rows into a single dataframe
+:::
+
+See more on the purrr cheatsheet.
+
+## Workflow
+
+* When in doubt, start with a loop.
+* If the operation you want to iterate or vectorize has multiple steps, write a custom function.
+* If you decide to use something other than a loop, consider what you need as your input(s) and the shape you need your output to be.
+* In general, write code so that it's as easy as possible to troubleshoot.
+    + Make it easy to see object values in your environment
+    + Print to the console as a way of checking values
+    + Use RStudio's debugging tools (breakpoints, `debugonce()`, `browser()`)
+
+## Resources {.smaller}
+
+::: {.nonincremental}
+- [RUG SharePoint site (presentations on loops, custom functions)](https://sokansas.sharepoint.com/sites/KDHEBEPHI_RUsers)
+- [R for Data Science: Iteration](https://r4ds.hadley.nz/iteration.html)
+- [The Epidemiologist R Handbook: Iteration, loops, and lists](https://www.epirhandbook.com/en/new_pages/iteration.html)
+- [`mutate()` documentation](https://dplyr.tidyverse.org/reference/mutate.html)
+- [`across()` documentation](https://dplyr.tidyverse.org/reference/across.html)
+- [Tidy selection in dplyr functions](https://dplyr.tidyverse.org/reference/dplyr_tidy_select.html)
+- [purrr package & cheatsheet](https://purrr.tidyverse.org/index.html)
+- [DataCamp `apply()` tutorial](https://www.datacamp.com/tutorial/r-tutorial-apply-family)
+- [Another `apply()` tutorial](https://ademos.people.uic.edu/Chapter4.html)
+:::
