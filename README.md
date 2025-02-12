@@ -1,3 +1,7 @@
-This repo contains slides for a talk given on 4/8/2024 to the Kansas Department of Health and Environment's R User Group.
+Vectorization and iteration in R
 
-[Click here to launch the slides.](https://eliotmonaco.github.io/presentation-vectorization/)
+Presented to the Kansas Department of Health and Environment R User Group
+
+2024-09-09
+
+[Launch slideshow](https://eliotmonaco.github.io/presentation-vectorization/)
